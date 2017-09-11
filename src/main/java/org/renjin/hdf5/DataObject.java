@@ -122,6 +122,8 @@ public class DataObject {
                 return new FillValueMessage(reader);
             case DataLayoutMessage.TYPE:
                 return new DataLayoutMessage(reader);
+            case DataStorageMessage.TYPE:
+                return new DataStorageMessage(reader);
             default:
                 return new UnknownMessage(messageType, messageData);
         }

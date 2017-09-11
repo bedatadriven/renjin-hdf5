@@ -13,7 +13,6 @@ public class ChunkNode {
     private final byte nodeType;
 
     private ChunkKey keys[];
-    private long childPointers[];
 
     public ChunkNode(DataLayoutMessage dataLayout, HeaderReader reader) throws IOException {
         reader.checkSignature("TREE");
@@ -24,14 +23,27 @@ public class ChunkNode {
         addressRightSibling = reader.readOffset();
 
         keys = new ChunkKey[entriesUsed + 1];
-        childPointers = new long[entriesUsed];
 
-        for (int i = 0; i < entriesUsed; i++) {
-            keys[i] = new ChunkKey(reader, dataLayout.getDimensionality());
-            childPointers[i] = reader.readOffset();
+        for (int i = 0; i < entriesUsed + 1; i++) {
+            keys[i] = new ChunkKey(reader,
+                dataLayout.getDimensionality(),
+                (i < entriesUsed));
         }
-
-        keys[entriesUsed] = new ChunkKey(reader, dataLayout.getDimensionality());
     }
 
+    public boolean isLeaf() {
+        return nodeLevel == 0;
+    }
+
+    public ChunkKey findChildAddress(long[] chunkCoordinates) {
+        for (int i = 0; i < keys.length - 1; i++) {
+            int lower = keys[i].compare(chunkCoordinates);
+            int upper = keys[i+1].compare(chunkCoordinates);
+
+            if(lower <= 0 && upper > 0) {
+                return keys[i];
+            }
+        }
+        throw new IllegalStateException();
+    }
 }

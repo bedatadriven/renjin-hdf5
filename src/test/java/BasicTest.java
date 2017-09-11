@@ -29,5 +29,7 @@ public class BasicTest {
 
         System.out.println(chunkTree);
 
+        double valueAt = chunkTree.valueAt(new int[] { 3, 0 });
+
     }
 }
