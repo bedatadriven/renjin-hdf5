@@ -1,16 +1,14 @@
 package org.renjin.hdf5.vector;
 
 
-import java.nio.DoubleBuffer;
-
 public class ChunkCursor {
 
 
     private final long vectorOffset;
     private final long vectorLength;
-    private final DoubleBuffer values;
+    private final double[] values;
 
-    public ChunkCursor(long vectorOffset, long vectorLength, DoubleBuffer values) {
+    public ChunkCursor(long vectorOffset, long vectorLength, double[] values) {
 
         this.vectorOffset = vectorOffset;
         this.vectorLength = vectorLength;
@@ -22,6 +20,6 @@ public class ChunkCursor {
     }
 
     public double valueAt(int i) {
-        return values.get((int)(i - vectorOffset));
+        return values[((int)(i - vectorOffset))];
     }
 }

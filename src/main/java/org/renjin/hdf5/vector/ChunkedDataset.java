@@ -61,8 +61,6 @@ public class ChunkedDataset {
 
     /**
      * Builds an R attribute list that includes this dataset's dimension.
-     * @param layout
-     * @return
      */
     public AttributeMap buildAttributes() {
 

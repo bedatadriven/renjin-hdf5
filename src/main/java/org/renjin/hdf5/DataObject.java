@@ -1,8 +1,8 @@
 package org.renjin.hdf5;
 
 
-import com.google.common.collect.Iterables;
 import org.renjin.hdf5.message.*;
+import org.renjin.repackaged.guava.collect.Iterables;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;

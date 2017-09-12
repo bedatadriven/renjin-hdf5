@@ -1,26 +1,24 @@
 package org.renjin.hdf5.chunked;
 
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
-import com.google.common.cache.Weigher;
-import com.google.common.io.ByteStreams;
+
 import org.renjin.hdf5.HeaderReader;
 import org.renjin.hdf5.Superblock;
 import org.renjin.hdf5.message.DataLayoutMessage;
+import org.renjin.repackaged.guava.cache.CacheBuilder;
+import org.renjin.repackaged.guava.cache.CacheLoader;
+import org.renjin.repackaged.guava.cache.LoadingCache;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.DoubleBuffer;
 import java.nio.channels.FileChannel;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
-import java.util.zip.InflaterInputStream;
+import java.util.zip.DataFormatException;
 
 public class ChunkTree {
 
+    private final ChunkDecoder chunkDecoder;
     private FileChannel file;
     private Superblock superblock;
     private DataLayoutMessage dataLayout;
@@ -40,8 +38,9 @@ public class ChunkTree {
         this.dim = dataLayout.getDimensionality();
         this.chunkCount = (int)dataLayout.getChunkElementCount();
 
+        this.chunkDecoder = new ChunkDecoder((int)dataLayout.getChunkElementCount());
         this.chunkCache = CacheBuilder.newBuilder()
-            .maximumSize(10000)
+            .softValues()
             .build(new CacheLoader<ChunkKey, Chunk>() {
                 @Override
                 public Chunk load(ChunkKey key) throws Exception {
@@ -88,18 +87,11 @@ public class ChunkTree {
     }
 
     private Chunk readChunkData(ChunkKey key) throws IOException {
-        ByteBuffer chunkData = ByteBuffer.allocate(key.getChunkSize());
-        file.read(chunkData, key.getChildPointer());
-        chunkData.flip();
-
-        byte[] chunkDataArray = chunkData.array();
-
-        InflaterInputStream iis = new InflaterInputStream(new ByteArrayInputStream(chunkDataArray));
-        byte[] inflatedArray = ByteStreams.toByteArray(iis);
-
-        DoubleBuffer buffer = ByteBuffer.wrap(inflatedArray).asDoubleBuffer();
-
-        return new Chunk(key, buffer);
+        try {
+            return new Chunk(key, chunkDecoder.read(file, key.getChildPointer(), key.getChunkSize()));
+        } catch (DataFormatException e) {
+            throw new IOException(e);
+        }
     }
 
     private ChunkKey findNode(long[] chunkCoordinates) throws IOException {

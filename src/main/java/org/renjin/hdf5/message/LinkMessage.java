@@ -1,8 +1,8 @@
 package org.renjin.hdf5.message;
 
-import com.google.common.base.Charsets;
 import org.renjin.hdf5.Flags;
 import org.renjin.hdf5.HeaderReader;
+import org.renjin.repackaged.guava.base.Charsets;
 
 import java.io.IOException;
 import java.nio.charset.Charset;

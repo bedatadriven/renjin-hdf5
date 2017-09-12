@@ -1,9 +1,10 @@
 package org.renjin.hdf5;
 
 
-import com.google.common.base.Charsets;
-import com.google.common.primitives.UnsignedBytes;
-import com.google.common.primitives.UnsignedInts;
+
+import org.renjin.repackaged.guava.base.Charsets;
+import org.renjin.repackaged.guava.primitives.UnsignedBytes;
+import org.renjin.repackaged.guava.primitives.UnsignedInts;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
