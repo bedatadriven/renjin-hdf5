@@ -6,9 +6,7 @@ import java.io.IOException;
 
 public class DataLayoutMessage extends Message {
 
-    public static final int TYPE = 0x0008;
-
-
+    public static final int MESSAGE_TYPE = 0x0008;
 
     public enum LayoutClass {
         COMPACT,

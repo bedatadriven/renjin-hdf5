@@ -44,7 +44,6 @@ public class DataObject {
 
         for (int i = 0; i < totalNumberOfMessages; i++) {
             int messageType = reader.readUInt16();
-            System.out.println("Message Type: " + Integer.toHexString(messageType));
             int messageDataSize = reader.readUInt16();
 
             if(messageType != 0) {
@@ -97,8 +96,6 @@ public class DataObject {
             }
             byte[] messageData = reader.readBytes(messageDataSize);
 
-            System.out.println(Integer.toHexString(messageType));
-
             messages.add(createMessage(messageType, messageData));
         }
     }
@@ -107,21 +104,21 @@ public class DataObject {
 
         HeaderReader reader = new HeaderReader(superblock, ByteBuffer.wrap(messageData));
         switch (messageType) {
-            case LinkInfoMessage.TYPE:
+            case LinkInfoMessage.MESSAGE_TYPE:
                 return new LinkInfoMessage(reader);
-            case LinkMessage.TYPE:
+            case LinkMessage.MESSAGE_TYPE:
                 return new LinkMessage(reader);
-            case GroupInfoMessage.TYPE:
+            case GroupInfoMessage.MESSAGE_TYPE:
                 return new GroupInfoMessage(reader);
-            case DataspaceMessage.TYPE:
+            case DataspaceMessage.MESSAGE_TYPE:
                 return new DataspaceMessage(reader);
-            case DatatypeMessage.TYPE:
+            case DatatypeMessage.MESSAGE_TYPE:
                 return new DatatypeMessage(reader);
-            case FillValueMessage.TYPE:
+            case FillValueMessage.MESSAGE_TYPE:
                 return new FillValueMessage(reader);
-            case DataLayoutMessage.TYPE:
+            case DataLayoutMessage.MESSAGE_TYPE:
                 return new DataLayoutMessage(reader);
-            case DataStorageMessage.TYPE:
+            case DataStorageMessage.MESSAGE_TYPE:
                 return new DataStorageMessage(reader);
             default:
                 return new UnknownMessage(messageType, messageData);

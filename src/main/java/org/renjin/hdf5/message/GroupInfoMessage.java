@@ -5,7 +5,7 @@ import org.renjin.hdf5.HeaderReader;
 
 public class GroupInfoMessage extends Message {
 
-    public static final int TYPE = 0x00A;
+    public static final int MESSAGE_TYPE = 0x00A;
 
     private int linkPhaseChangeMaximumCompactValue = -1;
     private int linkPhaseChangeMinimumDenseValue = -1;

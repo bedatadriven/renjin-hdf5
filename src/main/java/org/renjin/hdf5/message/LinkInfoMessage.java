@@ -7,7 +7,7 @@ import java.io.IOException;
 
 public class LinkInfoMessage extends Message {
 
-    public static final int TYPE = 0x02;
+    public static final int MESSAGE_TYPE = 0x02;
 
     private static final int FLAG_CREATION_ORDER_TRACKED = 0x1;
     private static final int FLAG_CREATION_ORDER_INDEXED = 0x2;

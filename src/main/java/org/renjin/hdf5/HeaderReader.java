@@ -145,11 +145,28 @@ public class HeaderReader {
         return buffer.getInt();
     }
 
+    public int[] readIntArray(int count) {
+        int array[] = new int[count];
+        for (int i = 0; i < count; i++) {
+            array[i] = readInt();
+        }
+        return array;
+    }
+
     public int readUInt32AsInt() throws IOException {
         long value = readUInt32();
         if(value > Integer.MAX_VALUE) {
             throw new IOException("Integer overflow");
         }
         return (int)value;
+    }
+
+    public String readNullTerminatedAsciiString(int nameLength) {
+        byte bytes[] = readBytes(nameLength);
+        int len = 0;
+        while(bytes[len] == 0 && len < bytes.length) {
+            len++;
+        }
+        return new String(bytes, 0, len, Charsets.US_ASCII);
     }
 }

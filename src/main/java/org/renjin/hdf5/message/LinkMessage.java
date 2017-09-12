@@ -16,7 +16,7 @@ import java.nio.charset.Charset;
  */
 public class LinkMessage extends Message {
 
-    public static final int TYPE = 0x6;
+    public static final int MESSAGE_TYPE = 0x6;
 
     public static final byte HARD_LINK = 0;
     public static final byte SOFT_LINK = 1;
