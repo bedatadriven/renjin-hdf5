@@ -1,5 +1,5 @@
 
-library("org.renjin:hdf")
+library("org.renjin:hdf5")
 library(hamcrest)
 
 test.real.matrix <- function() {

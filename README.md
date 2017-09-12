@@ -16,7 +16,7 @@ from R/Renjin without having to load the whole object into memory.
 The API is inspired by the [HDF5Array](http://bioconductor.org/packages/release/bioc/html/HDF5Array.html)
 package.
 
-    library("org.renjin:hdf")
+    library("org.renjin:hdf5")
     da <- HDF5Array("/my/data.h5", 'zscore_psiSite')
     
     dim(da)
