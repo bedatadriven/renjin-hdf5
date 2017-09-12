@@ -2,9 +2,6 @@ package org.renjin.hdf5.message;
 
 import org.renjin.hdf5.HeaderReader;
 
-/**
- * Created by alex on 11-9-17.
- */
 public class DataStorageMessage extends Message {
 
     public static final int TYPE = 0x000B;

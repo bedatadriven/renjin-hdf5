@@ -48,4 +48,19 @@ public class DataspaceMessage extends Message {
         }
     }
 
+    public long getTotalElementCount() {
+        long count = 1;
+        for (int i = 0; i < dimensionality; i++) {
+            count *= dimensionSize[i];
+        }
+        return count;
+    }
+
+    public int getDimensionality() {
+        return dimensionality;
+    }
+
+    public long getDimensionSize(int d) {
+        return dimensionSize[d];
+    }
 }

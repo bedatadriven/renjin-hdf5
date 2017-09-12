@@ -106,7 +106,6 @@ public class DataObject {
     private Message createMessage(int messageType, byte[] messageData) throws IOException {
 
         HeaderReader reader = new HeaderReader(superblock, ByteBuffer.wrap(messageData));
-
         switch (messageType) {
             case LinkInfoMessage.TYPE:
                 return new LinkInfoMessage(reader);

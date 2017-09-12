@@ -140,6 +140,9 @@ public class HeaderReader {
         return buffer.position();
     }
 
+    public int readInt() {
+        return buffer.getInt();
+    }
 
     public int readUInt32AsInt() throws IOException {
         long value = readUInt32();

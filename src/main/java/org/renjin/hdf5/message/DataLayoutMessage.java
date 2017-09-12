@@ -8,6 +8,8 @@ public class DataLayoutMessage extends Message {
 
     public static final int TYPE = 0x0008;
 
+
+
     public enum LayoutClass {
         COMPACT,
         CONTIGUOUS,
@@ -73,5 +75,21 @@ public class DataLayoutMessage extends Message {
 
     public int getChunkSize(int dimensionIndex) {
         return dimensionSize[dimensionIndex];
+    }
+
+    public int[] getChunkSize() {
+        return dimensionSize;
+    }
+
+    public int getDimensionSize(int i) {
+        return dimensionSize[i];
+    }
+
+    public long getChunkElementCount() {
+        long count = 1;
+        for (int i = 0; i < dimensionality; i++) {
+            count *= getChunkSize(i);
+        }
+        return count;
     }
 }
