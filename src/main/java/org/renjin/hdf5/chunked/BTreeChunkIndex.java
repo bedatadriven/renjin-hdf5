@@ -16,27 +16,23 @@ import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.zip.DataFormatException;
 
-public class ChunkTree {
+public class BTreeChunkIndex extends ChunkIndex {
 
     private final ChunkDecoder chunkDecoder;
     private FileChannel file;
     private Superblock superblock;
     private DataLayoutMessage dataLayout;
     private final ChunkNode rootNode;
-    private int dim = 0;
-    private int chunkCount;
 
     private Map<Long, ChunkNode> nodes = new HashMap<>();
 
     private LoadingCache<ChunkKey, Chunk> chunkCache;
 
-    public ChunkTree(FileChannel file, Superblock superblock, DataLayoutMessage dataLayout) throws IOException {
+    public BTreeChunkIndex(FileChannel file, Superblock superblock, DataLayoutMessage dataLayout) throws IOException {
         this.file = file;
         this.superblock = superblock;
         this.dataLayout = dataLayout;
-        this.rootNode = readNode(dataLayout.getTreeAddress(), 1000);
-        this.dim = dataLayout.getDimensionality();
-        this.chunkCount = (int)dataLayout.getChunkElementCount();
+        this.rootNode = readNode(dataLayout.getChunkIndexAddress(), 1000);
 
         this.chunkDecoder = new ChunkDecoder((int)dataLayout.getChunkElementCount());
         this.chunkCache = CacheBuilder.newBuilder()
@@ -73,6 +69,7 @@ public class ChunkTree {
     /**
      * Returns the chunk containing the value at the given
      */
+    @Override
     public Chunk chunkAt(long[] arrayIndex) throws IOException {
         return getChunk(arrayIndex);
     }
@@ -88,7 +85,7 @@ public class ChunkTree {
 
     private Chunk readChunkData(ChunkKey key) throws IOException {
         try {
-            return new Chunk(key, chunkDecoder.read(file, key.getChildPointer(), key.getChunkSize()));
+            return new Chunk(key.getOffset(), chunkDecoder.read(file, key.getChildPointer(), key.getChunkSize()));
         } catch (DataFormatException e) {
             throw new IOException(e);
         }

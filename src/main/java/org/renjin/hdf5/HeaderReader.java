@@ -41,7 +41,7 @@ public class HeaderReader {
         return new Flags(buffer.get());
     }
 
-    public int getInt() {
+    public int readInt() {
         return buffer.getInt();
     }
 
@@ -141,14 +141,14 @@ public class HeaderReader {
         return buffer.position();
     }
 
-    public int readInt() {
+    public int readUInt() {
         return buffer.getInt();
     }
 
     public int[] readIntArray(int count) {
         int array[] = new int[count];
         for (int i = 0; i < count; i++) {
-            array[i] = readInt();
+            array[i] = readUInt();
         }
         return array;
     }
@@ -168,5 +168,24 @@ public class HeaderReader {
             len++;
         }
         return new String(bytes, 0, len, Charsets.US_ASCII);
+    }
+
+    /**
+     * Reads an integer of the given size
+     * @param byteSize the size of the integer in bytes
+     */
+    public long readUInt(int byteSize) throws IOException {
+        switch (byteSize) {
+            case 1:
+                return readUInt8();
+            case 2:
+                return readUInt16();
+            case 4:
+                return readUInt32();
+            case 8:
+                return readUInt64();
+            default:
+                throw new IllegalArgumentException("bytes: " + byteSize);
+        }
     }
 }

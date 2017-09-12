@@ -4,7 +4,7 @@ import org.renjin.eval.EvalException;
 import org.renjin.hdf5.DataObject;
 import org.renjin.hdf5.Hdf5File;
 import org.renjin.hdf5.chunked.Chunk;
-import org.renjin.hdf5.chunked.ChunkTree;
+import org.renjin.hdf5.chunked.ChunkIndex;
 import org.renjin.hdf5.message.DataLayoutMessage;
 import org.renjin.hdf5.message.DataspaceMessage;
 import org.renjin.hdf5.message.DatatypeMessage;
@@ -21,7 +21,7 @@ public class ChunkedDataset {
     private final DataspaceMessage dataspace;
     private final DatatypeMessage datatype;
     private final DataLayoutMessage layout;
-    private final ChunkTree chunkTree;
+    private final ChunkIndex chunkIndex;
 
     private final int nDim;
     private long dimensionSize[];
@@ -38,7 +38,7 @@ public class ChunkedDataset {
          * Following the convention of HDFArray, we will preserve the layout but transpose
          * the dimensions, so that will treat columns as rows and vice-versa.
          */
-        nDim = layout.getDimensionality();
+        nDim = dataspace.getDimensionality();
         vectorLength = 1;
         dimensionSize = new long[nDim];
         chunkSize = new long[nDim];
@@ -48,7 +48,7 @@ public class ChunkedDataset {
             vectorLength *= dataspace.getDimensionSize(i);
         }
 
-        chunkTree = file.openChunkTree(layout);
+        chunkIndex = file.openChunkIndex(object);
     }
 
     private int checkedIntCast(long size) {
@@ -99,7 +99,7 @@ public class ChunkedDataset {
 
     public ChunkCursor chunkAt(int vectorIndex) throws IOException {
         long arrayIndex[] = vectorIndexToHdfsArrayIndex(vectorIndex);
-        Chunk chunk = chunkTree.chunkAt(arrayIndex);
+        Chunk chunk = chunkIndex.chunkAt(arrayIndex);
 
         long vectorStart = hdfsArrayIndexToVectorIndex(chunk.getChunkOffset());
         long vectorLength = chunkSize[0];

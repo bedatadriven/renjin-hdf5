@@ -27,7 +27,7 @@ public class ChunkKey {
 
         chunkSize = reader.readUInt32AsInt();
 
-        filterMask = reader.readInt();
+        filterMask = reader.readUInt();
 
         /*
          * The offset of the chunk within the dataset where D is the number of dimensions of the dataset, and the last

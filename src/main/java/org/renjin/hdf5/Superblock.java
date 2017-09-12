@@ -11,14 +11,16 @@ public class Superblock {
 
     private static final long MAX_LENGTH = 1000;
 
-    private final byte offsetsSize;
-    private final byte lengthsSize;
-    private final byte fileConsistencyFlags;
-    private final long baseAddress;
-    private final long superBlockExtensionAddress;
-    private final long endOfFileAddress;
-    private final long rootGroupObjectHeaderAddress;
-    private final int superBlockChecksum;
+    private final byte superBlockVersion;
+    private byte offsetsSize;
+    private byte lengthsSize;
+    private byte fileConsistencyFlags;
+    private long baseAddress;
+    private long superBlockExtensionAddress;
+    private long endOfFileAddress;
+    private long rootGroupObjectHeaderAddress;
+    private int superBlockChecksum;
+    private long driverInformationBlockAddress;
 
     public Superblock(FileChannel channel) throws IOException {
 
@@ -27,12 +29,51 @@ public class Superblock {
 
         readAndCheckSignature(buffer);
 
-        byte superBlockVersion = buffer.get();
+        superBlockVersion = buffer.get();
 
-        if(superBlockVersion != 2) {
+        if(superBlockVersion == 0) {
+            readVersion0(buffer);
+        } else if(superBlockVersion == 2 || superBlockVersion == 3) {
+            readVersion2(buffer);
+        } else {
             throw new IOException("Unsupported superblock version: " + superBlockVersion);
         }
+    }
 
+    private void readVersion0(MappedByteBuffer buffer) throws IOException {
+
+        int freeSpaceStorageVersion = buffer.get();
+        int rootGroupSymbolTableEntryVersion = buffer.get();
+        byte reserved = buffer.get();
+
+        int sharedHeaderMessageFormatVersion = buffer.get();
+        offsetsSize = buffer.get();
+        lengthsSize = buffer.get();
+        byte reserved1 = buffer.get();
+
+        int groupLeafNodeK = buffer.getShort();
+        int groupInternalNodeK = buffer.getShort();
+
+        int fileConsistencyFlags = buffer.getInt();
+
+        if(superBlockVersion >= 1) {
+            short indexedStorageInternalNodeK = buffer.getShort();
+            short reserved2 = buffer.getShort();
+        }
+
+        if(offsetsSize == 8) {
+            baseAddress = buffer.getLong();
+            long freeFilespaceInfoAddress = buffer.getLong();
+            endOfFileAddress = buffer.getLong();
+            driverInformationBlockAddress = buffer.getLong();
+        } else {
+            throw new UnsupportedOperationException("offsetsSize = " + offsetsSize);
+        }
+
+        throw new UnsupportedOperationException("Super block version " + superBlockVersion + " not implemented");
+    }
+
+    private void readVersion2(MappedByteBuffer buffer) throws IOException {
         /*
          * This value contains the number of bytes used to store addresses in the file. The values for the
          * addresses of objects in the file are offsets relative to a base address, usually the address of the
@@ -70,6 +111,10 @@ public class Superblock {
         }
     }
 
+    public byte getSuperBlockVersion() {
+        return superBlockVersion;
+    }
+
     public long getBaseAddress() {
         return baseAddress;
     }
@@ -85,4 +130,5 @@ public class Superblock {
     public long getRootGroupObjectHeaderAddress() {
         return rootGroupObjectHeaderAddress;
     }
+
 }

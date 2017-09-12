@@ -22,7 +22,9 @@ public class DataObject {
     public DataObject(FileChannel channel, Superblock superblock, long address) throws IOException {
         this.superblock = superblock;
 
-        MappedByteBuffer mappedByteBuffer = channel.map(FileChannel.MapMode.READ_ONLY, address, channel.size() - address);
+        MappedByteBuffer mappedByteBuffer = channel.map(FileChannel.MapMode.READ_ONLY, address,
+            Math.min(5000, channel.size() - address));
+
         HeaderReader reader = new HeaderReader(superblock, mappedByteBuffer);
 
         if(reader.peekByte() == 'O') {
@@ -70,10 +72,10 @@ public class DataObject {
         Flags flags = reader.readFlags();
 
         if (flags.isSet(5)) {
-            int accessTime = reader.getInt();
-            int modificationTime = reader.getInt();
-            int changeTime = reader.getInt();
-            int birthTime = reader.getInt();
+            int accessTime = reader.readInt();
+            int modificationTime = reader.readInt();
+            int changeTime = reader.readInt();
+            int birthTime = reader.readInt();
         }
 
         if (flags.isSet(4)) {

@@ -6,11 +6,11 @@ package org.renjin.hdf5.chunked;
 public class Chunk {
 
 
-    private final ChunkKey key;
+    private final long[] chunkOffset;
     private final double[] values;
 
-    public Chunk(ChunkKey key, double[] values) {
-        this.key = key;
+    public Chunk(long[] chunkOffset, double[] values) {
+        this.chunkOffset = chunkOffset;
         this.values = values;
     }
 
@@ -23,7 +23,7 @@ public class Chunk {
     }
 
     public long[] getChunkOffset() {
-        return key.getOffset();
+        return chunkOffset;
     }
 
 }

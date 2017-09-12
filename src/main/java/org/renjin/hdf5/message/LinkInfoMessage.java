@@ -39,4 +39,13 @@ public class LinkInfoMessage extends Message {
         }
     }
 
+    public boolean hasFractalHeap() {
+        return fractalHeapAddress != -1;
+    }
+
+    public long getFractalHeapAddress() {
+        return fractalHeapAddress;
+    }
+
+
 }

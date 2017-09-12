@@ -1,8 +1,12 @@
 package org.renjin.hdf5;
 
 
-import org.renjin.hdf5.chunked.ChunkTree;
+import org.renjin.hdf5.chunked.ChunkIndex;
+import org.renjin.hdf5.chunked.BTreeChunkIndex;
+import org.renjin.hdf5.chunked.FixedArrayChunkIndex;
 import org.renjin.hdf5.message.DataLayoutMessage;
+import org.renjin.hdf5.message.DataspaceMessage;
+import org.renjin.hdf5.message.LinkInfoMessage;
 import org.renjin.hdf5.message.LinkMessage;
 
 import java.io.File;
@@ -24,6 +28,8 @@ public class Hdf5File {
         channel = new RandomAccessFile(file, "r").getChannel();
         superblock = new Superblock(channel);
 
+        System.out.println(((double) channel.size()) / (double)Integer.MAX_VALUE);
+
         // Read root group object
         rootObject = new DataObject(channel, superblock, superblock.getRootGroupObjectHeaderAddress());
     }
@@ -38,10 +44,23 @@ public class Hdf5File {
     }
 
     public DataObject getObject(String name) throws IOException {
-        Iterable<LinkMessage> messages = rootObject.getMessages(LinkMessage.class);
-        for (LinkMessage message : messages) {
-            if(message.getLinkName().equals(name)) {
-                return objectAt(message.getAddress());
+
+        LinkInfoMessage linkInfo = rootObject.getMessage(LinkInfoMessage.class);
+        if(linkInfo.hasFractalHeap()) {
+            FractalHeap heap = new FractalHeap(this.channel, superblock, linkInfo.getFractalHeapAddress());
+            FractalHeap.DirectBlock rootBlock = heap.getRootBlock();
+            LinkMessage link = rootBlock.readLinkMessage();
+
+            if(link.getLinkName().equals(name)) {
+                return objectAt(link.getAddress());
+            }
+        } else {
+
+            Iterable<LinkMessage> messages = rootObject.getMessages(LinkMessage.class);
+            for (LinkMessage message : messages) {
+                if (message.getLinkName().equals(name)) {
+                    return objectAt(message.getAddress());
+                }
             }
         }
         throw new IllegalArgumentException("No such link: " + name);
@@ -52,7 +71,18 @@ public class Hdf5File {
         return new DataObject(channel, superblock, address);
     }
 
-    public ChunkTree openChunkTree(DataLayoutMessage layout) throws IOException {
-        return new ChunkTree(channel, superblock, layout);
+    public ChunkIndex openChunkIndex(DataObject object) throws IOException {
+
+        DataspaceMessage dataspace = object.getMessage(DataspaceMessage.class);
+        DataLayoutMessage layout = object.getMessage(DataLayoutMessage.class);
+
+        switch (layout.getChunkIndexingType()) {
+            case BTREE:
+                return new BTreeChunkIndex(channel, superblock, layout);
+            case FIXED_ARRAY:
+                return new FixedArrayChunkIndex(channel ,superblock, dataspace, layout);
+            default:
+                throw new UnsupportedOperationException("indexing type: " + layout.getChunkIndexingType());
+        }
     }
 }
