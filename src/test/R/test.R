@@ -1,5 +1,5 @@
 
-library("org.renjin:hdf5")
+library("org.renjin.bioconductor:HDF5Array")
 library(hamcrest)
 
 test.real.matrix <- function() {

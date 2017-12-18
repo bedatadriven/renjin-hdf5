@@ -3,3 +3,9 @@ importClass(org.renjin.hdf5.RenjinHdf5)
 
 export(HDF5Array)
 
+export(
+ setHDF5DumpDir, getHDF5DumpDir,
+    setHDF5DumpFile, getHDF5DumpFile, lsHDF5DumpFile,
+    setHDF5DumpName, getHDF5DumpName,
+    getHDF5DumpChunkDim,
+    setHDF5DumpCompressionLevel, getHDF5DumpCompressionLevel)

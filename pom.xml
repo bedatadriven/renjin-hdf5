@@ -2,9 +2,9 @@
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>org.renjin</groupId>
-  <artifactId>hdf5</artifactId>
-  <version>1.0-SNAPSHOT</version>
+  <groupId>org.renjin.bioconductor</groupId>
+  <artifactId>HDF5Array</artifactId>
+  <version>1.4.8-SNAPSHOT</version>
   <packaging>jar</packaging>
 
   <name>Renjin HDF Library</name>
@@ -17,7 +17,7 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-    <renjin.version>0.8.2423</renjin.version>
+    <renjin.version>0.8.2523</renjin.version>
     <maven.compiler.source>1.7</maven.compiler.source>
     <maven.compiler.target>1.7</maven.compiler.target>
   </properties>
@@ -34,6 +34,11 @@
     <dependency>
       <groupId>org.renjin</groupId>
       <artifactId>renjin-core</artifactId>
+      <version>${renjin.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>org.renjin</groupId>
+      <artifactId>methods</artifactId>
       <version>${renjin.version}</version>
     </dependency>
     <dependency>
