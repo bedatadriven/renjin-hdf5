@@ -9,3 +9,8 @@ export(
     setHDF5DumpName, getHDF5DumpName,
     getHDF5DumpChunkDim,
     setHDF5DumpCompressionLevel, getHDF5DumpCompressionLevel)
+
+
+exportClasses(
+    HDF5Array, HDF5Matrix
+)
