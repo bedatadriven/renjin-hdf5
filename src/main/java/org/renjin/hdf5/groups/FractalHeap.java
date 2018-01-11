@@ -1,14 +1,17 @@
-package org.renjin.hdf5;
+package org.renjin.hdf5.groups;
 
+import org.renjin.hdf5.Flags;
+import org.renjin.hdf5.Hdf5Data;
+import org.renjin.hdf5.HeaderReader;
+import org.renjin.hdf5.Superblock;
 import org.renjin.hdf5.message.LinkMessage;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 
 public class FractalHeap {
-    private FileChannel channel;
-    private Superblock superblock;
     private final byte version;
     private final int heapIdLength;
     private final long maximumSizeOfManagedObjects;
@@ -32,15 +35,12 @@ public class FractalHeap {
     private final long maximumDirectBlockSize;
     private final int maximumHeapSize;
     private final Flags headerFlags;
+    private Hdf5Data file;
 
-    public FractalHeap(FileChannel channel, Superblock superblock, long address) throws IOException {
-        this.channel = channel;
-        this.superblock = superblock;
+    public FractalHeap(Hdf5Data file, long address) throws IOException {
+        this.file = file;
 
-        MappedByteBuffer mappedByteBuffer = channel.map(FileChannel.MapMode.READ_ONLY, address,
-            Math.min(maxHeaderSize(superblock), channel.size() - address));
-
-        HeaderReader reader = new HeaderReader(superblock, mappedByteBuffer);
+        HeaderReader reader = file.readerAt(address, maxHeaderSize(file.getSuperblock()));
         reader.checkSignature("FRHP");
 
         version = reader.readByte();
@@ -117,12 +117,12 @@ public class FractalHeap {
 
     public class DirectBlock {
 
-        private final MappedByteBuffer buffer;
+        private final ByteBuffer buffer;
 
         public DirectBlock(long address, long size) throws IOException {
 
-            buffer = channel.map(FileChannel.MapMode.READ_ONLY, address, size);
-            HeaderReader reader = new HeaderReader(superblock, buffer);
+            buffer = file.bufferAt(address, size);
+            HeaderReader reader = new HeaderReader(file.getSuperblock(), buffer);
 
             reader.checkSignature("FHDB");
             byte version = reader.readByte();
@@ -138,7 +138,7 @@ public class FractalHeap {
         }
 
         public LinkMessage readLinkMessage() throws IOException {
-            return new LinkMessage(new HeaderReader(superblock, buffer.slice()));
+            return new LinkMessage(new HeaderReader(file.getSuperblock(), buffer.slice()));
         }
 
     }

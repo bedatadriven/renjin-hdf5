@@ -24,7 +24,7 @@ public class Superblock {
 
     public Superblock(FileChannel channel) throws IOException {
 
-        MappedByteBuffer buffer = channel.map(FileChannel.MapMode.READ_ONLY, 0, MAX_LENGTH);
+        MappedByteBuffer buffer = channel.map(FileChannel.MapMode.READ_ONLY, 0, Math.min(channel.size(), MAX_LENGTH));
         buffer.order(ByteOrder.LITTLE_ENDIAN);
 
         readAndCheckSignature(buffer);
@@ -56,21 +56,30 @@ public class Superblock {
 
         int fileConsistencyFlags = buffer.getInt();
 
-        if(superBlockVersion >= 1) {
-            short indexedStorageInternalNodeK = buffer.getShort();
-            short reserved2 = buffer.getShort();
-        }
 
         if(offsetsSize == 8) {
             baseAddress = buffer.getLong();
             long freeFilespaceInfoAddress = buffer.getLong();
             endOfFileAddress = buffer.getLong();
             driverInformationBlockAddress = buffer.getLong();
+
+            // Root Group Symbol Table Entry should start here...
+            long linkNameOffset = buffer.getLong();
+            rootGroupObjectHeaderAddress = buffer.getLong();
+            int cacheType = buffer.getInt();
+
+            if(cacheType == 2) {
+                throw new UnsupportedOperationException("Root Group Symbol Table Entry / cacheType = " + cacheType);
+            }
+            int reserved2 = buffer.getInt();
+
+            byte scratchPad[] = new byte[16];
+            buffer.get(scratchPad);
+
         } else {
             throw new UnsupportedOperationException("offsetsSize = " + offsetsSize);
         }
 
-        throw new UnsupportedOperationException("Super block version " + superBlockVersion + " not implemented");
     }
 
     private void readVersion2(MappedByteBuffer buffer) throws IOException {

@@ -15,18 +15,13 @@ public class DataObject {
 
     private static final int MESSAGE_SHARED_BIT = 1;
 
+    private final Hdf5Data file;
     private final List<Message> messages = new ArrayList<>();
-    private Superblock superblock;
 
+    public DataObject(Hdf5Data file, long address) throws IOException {
+        this.file = file;
 
-    public DataObject(FileChannel channel, Superblock superblock, long address) throws IOException {
-        this.superblock = superblock;
-
-        MappedByteBuffer mappedByteBuffer = channel.map(FileChannel.MapMode.READ_ONLY, address,
-            Math.min(5000, channel.size() - address));
-
-        HeaderReader reader = new HeaderReader(superblock, mappedByteBuffer);
-
+        HeaderReader reader = file.readerAt(address);
         if(reader.peekByte() == 'O') {
             readVersion2(reader);
         } else {
@@ -44,7 +39,8 @@ public class DataObject {
         long objectReferenceCount = reader.readUInt32();
         long objectHeaderSize = reader.readUInt32();
 
-        for (int i = 0; i < totalNumberOfMessages; i++) {
+        int messagesRead = 0;
+        while(messagesRead < totalNumberOfMessages) {
             int messageType = reader.readUInt16();
             int messageDataSize = reader.readUInt16();
 
@@ -58,6 +54,7 @@ public class DataObject {
                 } else {
                     messages.add(createMessage(messageType, messageData));
                 }
+                messagesRead ++;
             }
         }
     }
@@ -104,7 +101,7 @@ public class DataObject {
 
     private Message createMessage(int messageType, byte[] messageData) throws IOException {
 
-        HeaderReader reader = new HeaderReader(superblock, ByteBuffer.wrap(messageData));
+        HeaderReader reader = new HeaderReader(file.getSuperblock(), ByteBuffer.wrap(messageData));
         switch (messageType) {
             case LinkInfoMessage.MESSAGE_TYPE:
                 return new LinkInfoMessage(reader);
@@ -122,6 +119,8 @@ public class DataObject {
                 return new DataLayoutMessage(reader);
             case DataStorageMessage.MESSAGE_TYPE:
                 return new DataStorageMessage(reader);
+            case SymbolTableMessage.MESSAGE_TYPE:
+                return new SymbolTableMessage(reader);
             default:
                 return new UnknownMessage(messageType, messageData);
         }
@@ -133,5 +132,14 @@ public class DataObject {
 
     public <T extends Message> T getMessage(Class<T> messageClass) {
         return Iterables.getOnlyElement(getMessages(messageClass));
+    }
+
+    public boolean hasMessage(Class<? extends Message> messageClass) {
+        for (Message message : messages) {
+            if(message.getClass().equals(messageClass)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

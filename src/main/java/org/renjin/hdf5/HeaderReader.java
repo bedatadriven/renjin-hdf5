@@ -3,6 +3,7 @@ package org.renjin.hdf5;
 
 
 import org.renjin.repackaged.guava.base.Charsets;
+import org.renjin.repackaged.guava.base.Preconditions;
 import org.renjin.repackaged.guava.primitives.UnsignedBytes;
 import org.renjin.repackaged.guava.primitives.UnsignedInts;
 
@@ -17,6 +18,7 @@ public class HeaderReader {
     private ByteBuffer buffer;
 
     public HeaderReader(Superblock superblock, ByteBuffer buffer) {
+        Preconditions.checkNotNull(superblock, "superblock");
         this.superblock = superblock;
         this.buffer = buffer;
         this.buffer.order(ByteOrder.LITTLE_ENDIAN);

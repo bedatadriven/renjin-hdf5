@@ -1,5 +1,6 @@
 package org.renjin.hdf5.chunked;
 
+import org.renjin.hdf5.Hdf5Data;
 import org.renjin.hdf5.HeaderReader;
 import org.renjin.hdf5.Superblock;
 import org.renjin.hdf5.message.DataLayoutMessage;
@@ -37,8 +38,7 @@ public class FixedArrayChunkIndex extends ChunkIndex {
 
     private static final int CHECKSUM_SIZE = 4;
 
-    private FileChannel channel;
-    private final Superblock superblock;
+    private Hdf5Data file;
     private final DataspaceMessage dataspace;
     private final DataLayoutMessage layout;
     private final long maxNumEntries;
@@ -54,16 +54,14 @@ public class FixedArrayChunkIndex extends ChunkIndex {
 
     private final Cache<Integer, Chunk> chunkCache;
 
-    public FixedArrayChunkIndex(FileChannel channel, Superblock superblock,
+    public FixedArrayChunkIndex(Hdf5Data file,
                                 DataspaceMessage dataspace,
                                 DataLayoutMessage layout) throws IOException {
-        this.channel = channel;
-        this.superblock = superblock;
+        this.file = file;
         this.dataspace = dataspace;
         this.layout = layout;
-        MappedByteBuffer headerBuffer = channel.map(FileChannel.MapMode.READ_ONLY,
-            layout.getChunkIndexAddress(), headerSize(superblock));
-        HeaderReader reader = new HeaderReader(superblock, headerBuffer);
+
+        HeaderReader reader =  file.readerAt(layout.getChunkIndexAddress(), headerSize(file.getSuperblock()));
 
         reader.checkSignature("FAHD");
         byte version = reader.readByte();
@@ -86,15 +84,15 @@ public class FixedArrayChunkIndex extends ChunkIndex {
         int checkSum = reader.readInt();
 
         int pagingBitMapSize = ceilDiv(numberOfPages, 8);
-        dataBlockHeaderSize = 6 + superblock.getOffsetSize() + pagingBitMapSize + CHECKSUM_SIZE;
+        dataBlockHeaderSize = 6 + file.getSuperblock().getOffsetSize() + pagingBitMapSize + CHECKSUM_SIZE;
 
         long datablockSize = dataBlockHeaderSize +
             dataBlockPageSize * numberOfPages;
 
-        dataBlockBuffer = channel.map(FileChannel.MapMode.READ_ONLY, dataBlockAddress, datablockSize);
+        dataBlockBuffer = file.map(FileChannel.MapMode.READ_ONLY, dataBlockAddress, datablockSize);
         dataBlockBuffer.order(ByteOrder.LITTLE_ENDIAN);
 
-        HeaderReader dataBlockHeaderReader = new HeaderReader(superblock, dataBlockBuffer);
+        HeaderReader dataBlockHeaderReader = new HeaderReader(file.getSuperblock(), dataBlockBuffer);
         dataBlockHeaderReader.checkSignature("FADB");
         byte dataBlockVersion = dataBlockHeaderReader.readByte();
         byte dataBlockClientId = dataBlockHeaderReader.readByte();
@@ -161,7 +159,7 @@ public class FixedArrayChunkIndex extends ChunkIndex {
             chunkOffset[i] = (chunkOffset[i] / chunkSize[i]) * chunkSize[i];
         }
 
-        MappedByteBuffer chunkBuffer = channel.map(FileChannel.MapMode.READ_ONLY, chunkAddress,
+        MappedByteBuffer chunkBuffer = file.map(FileChannel.MapMode.READ_ONLY, chunkAddress,
             layout.getChunkElementCount() * layout.getDatasetElementSize());
 
         chunkBuffer.order(ByteOrder.LITTLE_ENDIAN);

@@ -1,6 +1,7 @@
 package org.renjin.hdf5.chunked;
 
 
+import org.renjin.hdf5.Hdf5Data;
 import org.renjin.hdf5.HeaderReader;
 import org.renjin.hdf5.Superblock;
 import org.renjin.hdf5.message.DataLayoutMessage;
@@ -19,8 +20,7 @@ import java.util.zip.DataFormatException;
 public class BTreeChunkIndex extends ChunkIndex {
 
     private final ChunkDecoder chunkDecoder;
-    private FileChannel file;
-    private Superblock superblock;
+    private Hdf5Data file;
     private DataLayoutMessage dataLayout;
     private final ChunkNode rootNode;
 
@@ -28,9 +28,8 @@ public class BTreeChunkIndex extends ChunkIndex {
 
     private LoadingCache<ChunkKey, Chunk> chunkCache;
 
-    public BTreeChunkIndex(FileChannel file, Superblock superblock, DataLayoutMessage dataLayout) throws IOException {
+    public BTreeChunkIndex(Hdf5Data file, DataLayoutMessage dataLayout) throws IOException {
         this.file = file;
-        this.superblock = superblock;
         this.dataLayout = dataLayout;
         this.rootNode = readNode(dataLayout.getChunkIndexAddress(), 1000);
 
@@ -56,14 +55,7 @@ public class BTreeChunkIndex extends ChunkIndex {
     }
 
     private ChunkNode readNode(long address, int size) throws IOException {
-
-        ByteBuffer nodeBuffer = ByteBuffer.allocate(size);
-        int bytesRead = file.read(nodeBuffer, address);
-        assert bytesRead == size;
-
-        nodeBuffer.flip();
-
-        return new ChunkNode(dataLayout, new HeaderReader(superblock, nodeBuffer));
+        return new ChunkNode(dataLayout, file.readerAt(address, size));
     }
 
     /**

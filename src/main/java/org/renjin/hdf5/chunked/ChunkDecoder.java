@@ -1,5 +1,7 @@
 package org.renjin.hdf5.chunked;
 
+import org.renjin.hdf5.Hdf5Data;
+
 import java.io.EOFException;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -39,7 +41,7 @@ public class ChunkDecoder {
         this.buffer = new byte[chunkSize * 8];
     }
 
-    public double[] read(FileChannel channel, long address, int size) throws DataFormatException, IOException {
+    public double[] read(Hdf5Data file, long address, int size) throws DataFormatException, IOException {
 
         // Set up our buffer for reading in the compressed data
         if(deflatedBufferArray == null || deflatedBufferArray.length < size) {
@@ -50,7 +52,7 @@ public class ChunkDecoder {
         // Read the compressed chunk into our buffer
         deflatedBuffer.position(0);
         deflatedBuffer.limit(size);
-        channel.read(deflatedBuffer, address);
+        file.read(deflatedBuffer, address);
 
         // Deflate from the compressed buffer into the uncompressed buffer
         inf.reset();
