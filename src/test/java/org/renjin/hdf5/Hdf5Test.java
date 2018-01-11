@@ -32,8 +32,14 @@ public class Hdf5Test {
 
   }
 
+  @Test
+  public void tenx() throws IOException {
+    Hdf5File hdf5File = new Hdf5File(new File("/media/alex/SANDISK/tenx.h5"));
+    DataObject object = hdf5File.getObject("mm10/data");
 
-  @Ignore
+  }
+
+
   @Test
   public void commit() throws IOException {
     Hdf5File hdf5File = new Hdf5File(testFile("h5ex_t_commit.h5"));

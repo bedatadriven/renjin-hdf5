@@ -7,6 +7,7 @@ import org.renjin.repackaged.guava.base.Preconditions;
 import org.renjin.repackaged.guava.primitives.UnsignedBytes;
 import org.renjin.repackaged.guava.primitives.UnsignedInts;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -91,6 +92,10 @@ public class HeaderReader {
         }
     }
 
+    /**
+     * Sets the number of remaining bytes left in this header.
+     * @param length number of bytes
+     */
     public void updateLimit(int length) {
         buffer.limit(buffer.position() + length);
     }
@@ -172,6 +177,15 @@ public class HeaderReader {
         return new String(bytes, 0, len, Charsets.US_ASCII);
     }
 
+    public String readNullTerminatedAsciiString() {
+        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+        int b;
+        while((b=readUInt8()) != 0) {
+            bytes.write(b);
+        }
+        return new String(bytes.toByteArray(), Charsets.US_ASCII);
+    }
+
     /**
      * Reads an integer of the given size
      * @param byteSize the size of the integer in bytes
@@ -188,6 +202,17 @@ public class HeaderReader {
                 return readUInt64();
             default:
                 throw new IllegalArgumentException("bytes: " + byteSize);
+        }
+    }
+
+    /**
+     * If the reader is not currently aligned to the given multiple, advance the position until it is.
+     * @param multiple
+     */
+    public void alignTo(int multiple) {
+        int misalignment = (buffer.position() % multiple);
+        if(misalignment != 0) {
+            buffer.position(buffer.position() + misalignment);
         }
     }
 }
