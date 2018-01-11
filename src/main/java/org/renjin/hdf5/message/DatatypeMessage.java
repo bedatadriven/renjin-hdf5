@@ -109,4 +109,28 @@ public class DatatypeMessage extends Message {
         return dataClass == DataClass.FLOATING_POINT &&
                size == 8;
     }
+
+    public boolean isSignedInteger32() {
+        return dataClass == DataClass.FIXED_POINT &&
+            size == 4 &&
+            signed;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder("Datatype{");
+        if(isDoubleIEE754()) {
+            sb.append("IEE754 Double");
+        } else {
+            if(!signed) {
+                sb.append("UNSIGNED ");
+            }
+            sb.append(dataClass);
+            sb.append("(");
+            sb.append(size);
+            sb.append(")");
+        }
+        sb.append("}");
+        return sb.toString();
+    }
 }

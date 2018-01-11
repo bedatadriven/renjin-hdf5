@@ -2,36 +2,36 @@ package org.renjin.hdf5;
 
 
 import org.renjin.hdf5.message.*;
+import org.renjin.repackaged.guava.base.Optional;
 import org.renjin.repackaged.guava.collect.Iterables;
-import org.renjin.repackaged.guava.collect.Lists;
 import org.renjin.repackaged.guava.primitives.Ints;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Queue;
 
 public class DataObject {
 
     private static final int MESSAGE_SHARED_BIT = 1;
 
     private final Hdf5Data file;
+    private long address;
     private byte version;
     private final List<Message> messages = new ArrayList<>();
+    private final Queue<ContinuationMessage> continuations = new ArrayDeque<>();
 
     public DataObject(Hdf5Data file, long address) throws IOException {
         this.file = file;
+        this.address = address;
 
         HeaderReader reader = file.readerAt(address);
         if(reader.peekByte() == 'O') {
             readVersion2(reader);
         } else {
             readVersion1(reader);
-        }
-
-        List<ContinuationMessage> continuations = Lists.newArrayList(getMessages(ContinuationMessage.class));
-        for (ContinuationMessage continuationMessage : continuations) {
-            readContinuation(continuationMessage);
         }
     }
 
@@ -48,23 +48,22 @@ public class DataObject {
 
         readMessagesVersion1(reader, objectHeaderSize);
 
-    }
 
-    private void readContinuation(ContinuationMessage continuationMessage) throws IOException {
-        HeaderReader reader = file.readerAt(continuationMessage.getOffset(), continuationMessage.getLength());
-        if(version == 1) {
-            // Continuation blocks for version 1 object headers have no special formatting information;
-            // they are merely a list of object header message info sequences (type, size, flags, reserved bytes and
-            // data for each message sequence). See the description of Version 1 Data Object Header Prefix.
-
-            readMessagesVersion1(reader, Ints.checkedCast(continuationMessage.getLength()));
-
-        } else if(version == 2) {
-
-            throw new UnsupportedOperationException("TODO: Continuation v2");
-
+        ContinuationMessage continuation;
+        while((continuation = continuations.poll()) != null) {
+            readContinuationV1(continuation);
         }
     }
+
+    private void readContinuationV1(ContinuationMessage continuationMessage) throws IOException {
+        HeaderReader reader = file.readerAt(continuationMessage.getOffset(), continuationMessage.getLength());
+
+        // Continuation blocks for version 1 object headers have no special formatting information;
+        // they are merely a list of object header message info sequences (type, size, flags, reserved bytes and
+        // data for each message sequence). See the description of Version 1 Data Object Header Prefix.
+        readMessagesVersion1(reader, Ints.checkedCast(continuationMessage.getLength()));
+    }
+
 
     private void readMessagesVersion1(HeaderReader reader, int objectHeaderSize) throws IOException {
 
@@ -83,12 +82,19 @@ public class DataObject {
                 if (messageFlags.isSet(MESSAGE_SHARED_BIT)) {
                     throw new UnsupportedOperationException("Shared message");
                 } else {
-                    messages.add(createMessage(messageType, messageData));
+                    addMessage(createMessage(messageType, messageData));
                 }
             }
 
             objectHeaderSize -= 8;
             objectHeaderSize -= messageDataSize;
+        }
+    }
+
+    private void addMessage(Message message) {
+        messages.add(message);
+        if(message instanceof ContinuationMessage) {
+            continuations.add((ContinuationMessage) message);
         }
     }
 
@@ -118,13 +124,35 @@ public class DataObject {
         reader.updateLimit(chunkLength);
 
         readMessagesV2(reader, flags);
+
+        ContinuationMessage continuation;
+        while((continuation = continuations.poll()) != null) {
+            readContinuationV2(continuation, flags);
+        }
+    }
+
+
+    private void readContinuationV2(ContinuationMessage continuationMessage, Flags flags) throws IOException {
+        HeaderReader reader = file.readerAt(continuationMessage.getOffset(), continuationMessage.getLength());
+        reader.checkSignature("OCHK");
+        readMessagesV2(reader, flags);
     }
 
     private void readMessagesV2(HeaderReader reader, Flags flags) throws IOException {
-        while(reader.remaining() > 0) {
+
+        // A gap in an object header chunk is inferred by the end of the messages for the chunk before the beginning
+        // of the chunk’s checksum. Gaps are always smaller than the size of an object header message prefix
+        // (message type + message size + message flags).
+        int messageDataPrefixSize = 4;
+
+        while(reader.remaining() > messageDataPrefixSize) {
             int messageType = reader.readUInt8();
+            if(messageType == 0) {
+                break;
+            }
+
             int messageDataSize = reader.readUInt16();
-            byte messageFlags = reader.readByte();
+            Flags messageFlags = reader.readFlags();
 
             short messageCreationOrder;
             if (flags.isSet(2)) {
@@ -132,7 +160,7 @@ public class DataObject {
             }
             byte[] messageData = reader.readBytes(messageDataSize);
 
-            messages.add(createMessage(messageType, messageData));
+            addMessage(createMessage(messageType, messageData));
         }
     }
 
@@ -182,5 +210,14 @@ public class DataObject {
             }
         }
         return false;
+    }
+
+    public <T extends Message> Optional<T> getMessageIfPresent(Class<T> messageClass) {
+        for (Message message : messages) {
+            if(message.getClass().equals(messageClass)) {
+                return Optional.<T>of((T) message);
+            }
+        }
+        return Optional.absent();
     }
 }

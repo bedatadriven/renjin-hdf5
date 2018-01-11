@@ -3,6 +3,7 @@ package org.renjin.hdf5;
 import org.hamcrest.CoreMatchers;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.renjin.hdf5.chunked.Chunk;
 import org.renjin.hdf5.chunked.ChunkIndex;
 import org.renjin.repackaged.guava.io.Resources;
 
@@ -14,6 +15,7 @@ import static org.junit.Assert.assertThat;
 /**
  *
  */
+@Ignore
 public class Hdf5Test {
 
   @Ignore
@@ -35,9 +37,12 @@ public class Hdf5Test {
 
   @Test
   public void tenx() throws IOException {
-    Hdf5File hdf5File = new Hdf5File(new File("/media/alex/SANDISK/tenx.h5"));
+    Hdf5File hdf5File = new Hdf5File(new File("/home/alex/dev/renjin-benchmarks/bioinformatics/tenx/tenx_uncompressed.h5"));
     DataObject object = hdf5File.getObject("mm10", "data");
     ChunkIndex chunkIndex = hdf5File.openChunkIndex(object);
+
+    Chunk chunk = chunkIndex.chunkAt(new long[] { 0 });
+
 
   }
 

@@ -7,16 +7,19 @@ import java.io.IOException;
 
 public class ChunkNode {
 
-    private final long addressLeftSibling;
-    private final long addressRightSibling;
     private final int nodeLevel;
     private final byte nodeType;
+    private final long addressLeftSibling;
+    private final long addressRightSibling;
 
     private ChunkKey keys[];
 
     public ChunkNode(DataLayoutMessage dataLayout, HeaderReader reader) throws IOException {
         reader.checkSignature("TREE");
         nodeType = reader.readByte();
+        if(nodeType != 1) {
+            throw new IllegalStateException("Expected nodeType = chunk (1)");
+        }
         nodeLevel = reader.readUInt8();
         int entriesUsed = reader.readUInt16();
         addressLeftSibling = reader.readOffset();

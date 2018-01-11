@@ -106,4 +106,8 @@ public class DataStorageMessage extends Message {
             filters.add(new Filter(filterId, name, clientData, optional));
         }
     }
+
+    public List<Filter> getFilters() {
+        return filters;
+    }
 }

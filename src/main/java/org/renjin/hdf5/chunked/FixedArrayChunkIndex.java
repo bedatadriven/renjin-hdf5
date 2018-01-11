@@ -7,6 +7,7 @@ import org.renjin.hdf5.message.DataLayoutMessage;
 import org.renjin.hdf5.message.DataspaceMessage;
 import org.renjin.repackaged.guava.cache.Cache;
 import org.renjin.repackaged.guava.cache.CacheBuilder;
+import org.renjin.repackaged.guava.primitives.Ints;
 
 import java.io.IOException;
 import java.nio.ByteOrder;
@@ -39,7 +40,6 @@ public class FixedArrayChunkIndex extends ChunkIndex {
     private static final int CHECKSUM_SIZE = 4;
 
     private Hdf5Data file;
-    private final DataspaceMessage dataspace;
     private final DataLayoutMessage layout;
     private final long maxNumEntries;
     private final int dataBlockHeaderSize;
@@ -54,12 +54,14 @@ public class FixedArrayChunkIndex extends ChunkIndex {
 
     private final Cache<Integer, Chunk> chunkCache;
 
+    private final ChunkDecoder decoder;
+
     public FixedArrayChunkIndex(Hdf5Data file,
                                 DataspaceMessage dataspace,
-                                DataLayoutMessage layout) throws IOException {
+                                DataLayoutMessage layout, ChunkDecoder decoder) throws IOException {
         this.file = file;
-        this.dataspace = dataspace;
         this.layout = layout;
+        this.decoder = decoder;
 
         HeaderReader reader =  file.readerAt(layout.getChunkIndexAddress(), headerSize(file.getSuperblock()));
 
@@ -154,20 +156,18 @@ public class FixedArrayChunkIndex extends ChunkIndex {
 
     private Chunk readChunk(long[] arrayIndex, long chunkAddress) throws IOException {
 
+        long[] chunkOffset = elementToChunk(arrayIndex);
+        long chunkSize = layout.getChunkElementCount() * layout.getDatasetElementSize();
+
+        return decoder.read(chunkOffset, chunkAddress, Ints.checkedCast(chunkSize));
+    }
+
+    private long[] elementToChunk(long[] arrayIndex) {
         long chunkOffset[] = Arrays.copyOf(arrayIndex, arrayIndex.length);
         for (int i = 0; i < chunkOffset.length; i++) {
             chunkOffset[i] = (chunkOffset[i] / chunkSize[i]) * chunkSize[i];
         }
-
-        MappedByteBuffer chunkBuffer = file.map(FileChannel.MapMode.READ_ONLY, chunkAddress,
-            layout.getChunkElementCount() * layout.getDatasetElementSize());
-
-        chunkBuffer.order(ByteOrder.LITTLE_ENDIAN);
-
-        double[] values = new double[(int)layout.getChunkElementCount()];
-        chunkBuffer.asDoubleBuffer().get(values);
-
-        return new Chunk(chunkOffset, values);
+        return chunkOffset;
     }
 
     public int arrayIndexToChunkIndex(long arrayIndex[]) {

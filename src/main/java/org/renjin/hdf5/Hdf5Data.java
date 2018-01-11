@@ -12,7 +12,8 @@ public class Hdf5Data {
   private Superblock superblock;
 
   public Hdf5Data(File file) throws IOException {
-    channel = new RandomAccessFile(file, "r").getChannel();
+    RandomAccessFile randomAccessFile = new RandomAccessFile(file, "r");
+    channel = randomAccessFile.getChannel();
     superblock = new Superblock(channel);
   }
 

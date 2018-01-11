@@ -21,6 +21,7 @@ public class Superblock {
     private long rootGroupObjectHeaderAddress;
     private int superBlockChecksum;
     private long driverInformationBlockAddress;
+    private int groupLeafNodeK;
 
     public Superblock(FileChannel channel) throws IOException {
 
@@ -51,7 +52,7 @@ public class Superblock {
         lengthsSize = buffer.get();
         byte reserved1 = buffer.get();
 
-        int groupLeafNodeK = buffer.getShort();
+        groupLeafNodeK = buffer.getShort();
         int groupInternalNodeK = buffer.getShort();
 
         int fileConsistencyFlags = buffer.getInt();

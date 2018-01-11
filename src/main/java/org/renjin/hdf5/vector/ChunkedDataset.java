@@ -104,6 +104,6 @@ public class ChunkedDataset {
         long vectorStart = hdfsArrayIndexToVectorIndex(chunk.getChunkOffset());
         long vectorLength = chunkSize[0];
 
-        return new ChunkCursor(vectorStart, vectorLength, chunk.getValues());
+        return new ChunkCursor(vectorStart, vectorLength, chunk);
     }
 }

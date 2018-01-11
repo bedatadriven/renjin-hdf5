@@ -1,18 +1,20 @@
 package org.renjin.hdf5.vector;
 
 
+import org.renjin.hdf5.chunked.Chunk;
+
 public class ChunkCursor {
 
 
     private final long vectorOffset;
     private final long vectorLength;
-    private final double[] values;
+    private Chunk chunk;
 
-    public ChunkCursor(long vectorOffset, long vectorLength, double[] values) {
+    public ChunkCursor(long vectorOffset, long vectorLength, Chunk chunk) {
 
         this.vectorOffset = vectorOffset;
         this.vectorLength = vectorLength;
-        this.values = values;
+        this.chunk = chunk;
     }
 
     public boolean containsVectorIndex(int vectorIndex) {
@@ -20,6 +22,6 @@ public class ChunkCursor {
     }
 
     public double valueAt(int i) {
-        return values[((int)(i - vectorOffset))];
+        return chunk.getDoubleAt(((int)(i - vectorOffset)));
     }
 }
