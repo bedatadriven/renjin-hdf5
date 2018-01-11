@@ -58,6 +58,14 @@ public class DataStorageMessage extends Message {
 
             int[] clientData = reader.readIntArray(numClientDataValues);
 
+            /*
+             * Four bytes of zeroes are added to the message at this point if the Client Data Number of
+             * Values field contains an odd number.
+             */
+            if(numClientDataValues % 2 != 0) {
+                reader.readReserved(4);
+            }
+
             filters.add(new Filter(filterId, name, clientData, optional));
         }
     }
@@ -97,7 +105,5 @@ public class DataStorageMessage extends Message {
 
             filters.add(new Filter(filterId, name, clientData, optional));
         }
-
     }
-
 }

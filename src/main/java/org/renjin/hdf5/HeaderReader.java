@@ -126,7 +126,12 @@ public class HeaderReader {
         if(superblock.getLengthSize() == 4) {
             return readUInt32();
         }
-        return readUInt64();
+        long value = buffer.getLong();
+        // -1 is the UNSPECIFIED value
+        if(value < -1) {
+            throw new IOException("Long length overflow");
+        }
+        return value;
     }
 
     public String readString(int length, Charset charset) {
@@ -171,7 +176,7 @@ public class HeaderReader {
     public String readNullTerminatedAsciiString(int nameLength) {
         byte bytes[] = readBytes(nameLength);
         int len = 0;
-        while(bytes[len] == 0 && len < bytes.length) {
+        while(bytes[len] != 0 && len < bytes.length) {
             len++;
         }
         return new String(bytes, 0, len, Charsets.US_ASCII);

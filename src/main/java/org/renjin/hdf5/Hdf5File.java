@@ -18,31 +18,39 @@ public class Hdf5File {
     public static final long UNDEFINED_ADDRESS = 0xFFFFFFFFFFFFFFFFL;
 
     private final Hdf5Data file;
-    private final GroupIndex groupIndex;
+    private final DataObject rootObject;
 
     public Hdf5File(File file) throws IOException {
         this.file = new Hdf5Data(file);
+        this.rootObject = new DataObject(this.file, this.file.getSuperblock().getRootGroupObjectHeaderAddress());
+    }
 
-        // Read root group object
-        DataObject rootObject = new DataObject(this.file, this.file.getSuperblock().getRootGroupObjectHeaderAddress());
-        if (rootObject.hasMessage(SymbolTableMessage.class)) {
-            SymbolTableMessage symbolTable = rootObject.getMessage(SymbolTableMessage.class);
-            groupIndex = new GroupBTree(this.file, symbolTable);
+    public DataObject getObject(String... path) throws IOException {
 
-        } else if(rootObject.hasMessage(LinkMessage.class)) {
-            LinkInfoMessage linkInfo = rootObject.getMessage(LinkInfoMessage.class);
+        DataObject node = rootObject;
+
+        for (int i = 0; i < path.length; i++) {
+            GroupIndex groupIndex = readGroupIndex(node);
+            node = groupIndex.getObject(path[i]);
+        }
+        return node;
+    }
+
+    private GroupIndex readGroupIndex(DataObject object) throws IOException {
+        if (object.hasMessage(SymbolTableMessage.class)) {
+            SymbolTableMessage symbolTable = object.getMessage(SymbolTableMessage.class);
+            return new GroupBTree(this.file, symbolTable);
+
+        } else if(object.hasMessage(LinkMessage.class)) {
+            LinkInfoMessage linkInfo = object.getMessage(LinkInfoMessage.class);
             if(linkInfo.hasFractalHeap()) {
-                groupIndex = new FractalHeapGroupIndex(this.file, linkInfo.getFractalHeapAddress());
+                return new FractalHeapGroupIndex(this.file, linkInfo.getFractalHeapAddress());
             } else {
-                groupIndex = new SimpleGroupIndex(this.file, rootObject.getMessages(LinkMessage.class));
+                return new SimpleGroupIndex(this.file, object.getMessages(LinkMessage.class));
             }
         } else {
             throw new UnsupportedOperationException("TODO: cannot construct group index");
         }
-    }
-
-    public DataObject getObject(String name) throws IOException {
-        return groupIndex.getObject(name);
     }
 
     public ChunkIndex openChunkIndex(DataObject object) throws IOException {

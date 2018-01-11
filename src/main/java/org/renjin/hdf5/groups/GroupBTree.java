@@ -19,7 +19,7 @@ public class GroupBTree implements GroupIndex {
     private final int nodeLevel;
     private final long leftSibling;
     private final long rightSibling;
-    private final SymbolTableNode[] nodes;
+    private final SymbolTableNode[] keys;
 
     private Node(long address) throws IOException {
       HeaderReader reader = file.readerAt(address);
@@ -39,14 +39,19 @@ public class GroupBTree implements GroupIndex {
       //     Indicates the byte offset into the local heap for the first object name in the
       //     subtree which that key describes.
 
-      nodes = new SymbolTableNode[entriesUsed + 1];
+      keys = new SymbolTableNode[entriesUsed + 1];
       for (int i = 0; i < entriesUsed + 1; i++) {
         long nodeAddress = reader.readLength();
         if(nodeAddress != 0) {
-          nodes[i] = new SymbolTableNode(nodeAddress);
+          keys[i] = new SymbolTableNode(nodeAddress);
         }
       }
     }
+
+    public boolean isLeaf() {
+      return nodeLevel == 0;
+    }
+
   }
 
 
@@ -99,7 +104,49 @@ public class GroupBTree implements GroupIndex {
 
 
   @Override
-  public DataObject getObject(String name) {
+  public DataObject getObject(String name) throws IOException {
+
+    Node node = rootNode;
+    while(!node.isLeaf()) {
+      throw new UnsupportedOperationException("TODO");
+    }
+
+    SymbolTableNode symbolTableNode = findChildAddress(node, name);
+    for (SymbolTableEntry entry : symbolTableNode.entries) {
+      if(entry.linkName.equals(name)) {
+        return file.objectAt(entry.objectHeaderAddress);
+      }
+    }
+
+
+    throw new IllegalArgumentException(name);
+  }
+
+  public SymbolTableNode findChildAddress(Node node, String name) {
+
+    if(node.keys.length == 2 && node.keys[0] == null) {
+      return node.keys[1];
+    }
+    throw new UnsupportedOperationException("TODO");
+//    for (int i = 0; i < node.keys.length - 1; i++) {
+//      int lower = compare(node.keys[i], name);
+//      int upper = compare(node.keys[i+1], name);
+//
+//      if(lower <= 0 && upper > 0) {
+//        return node.keys[i];
+//      }
+//    }
+//    throw new IllegalStateException();
+  }
+
+  private int compare(SymbolTableNode key, String name) {
+    if(key == null) {
+      return -1;
+    }
+    int first = key.entries[0].linkName.compareTo(name);
+    if(first <= 0) {
+      return first;
+    }
     throw new UnsupportedOperationException("TODO");
   }
 }

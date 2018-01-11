@@ -3,6 +3,7 @@ package org.renjin.hdf5;
 import org.hamcrest.CoreMatchers;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.renjin.hdf5.chunked.ChunkIndex;
 import org.renjin.repackaged.guava.io.Resources;
 
 import java.io.File;
@@ -35,7 +36,8 @@ public class Hdf5Test {
   @Test
   public void tenx() throws IOException {
     Hdf5File hdf5File = new Hdf5File(new File("/media/alex/SANDISK/tenx.h5"));
-    DataObject object = hdf5File.getObject("mm10/data");
+    DataObject object = hdf5File.getObject("mm10", "data");
+    ChunkIndex chunkIndex = hdf5File.openChunkIndex(object);
 
   }
 
