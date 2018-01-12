@@ -27,7 +27,8 @@ public class DatatypeMessage extends Message {
     private boolean signed;
 
 
-    public enum DataClass {
+
+  public enum DataClass {
         FIXED_POINT,
         FLOATING_POINT,
         TIME,
@@ -116,7 +117,12 @@ public class DatatypeMessage extends Message {
             signed;
     }
 
-    @Override
+    public ByteOrder getByteOrder() {
+      return byteOrder;
+    }
+
+
+  @Override
     public String toString() {
         StringBuilder sb = new StringBuilder("Datatype{");
         if(isDoubleIEE754()) {

@@ -67,7 +67,8 @@ public class Hdf5File {
                 return new BTreeChunkIndex(file, layout, chunkDecoder);
             case FIXED_ARRAY:
                 return new FixedArrayChunkIndex(file, dataspace, layout, chunkDecoder);
-
+            case EXTENSIBLE_ARRAY:
+                return new ExtensibleArrayChunkIndex(file, dataspace, layout, decoderFactory.createFactory(datatype));
             default:
                 throw new UnsupportedOperationException("indexing type: " + layout.getChunkIndexingType());
         }

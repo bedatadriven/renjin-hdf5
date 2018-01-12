@@ -6,9 +6,9 @@ import org.renjin.hdf5.message.DataStorageMessage;
 import org.renjin.hdf5.message.DatatypeMessage;
 import org.renjin.hdf5.message.Filter;
 import org.renjin.repackaged.guava.base.Optional;
-import org.renjin.repackaged.guava.collect.Lists;
 
 import java.nio.ByteBuffer;
+import java.nio.IntBuffer;
 import java.util.ArrayList;
 
 public class ChunkDecoderFactory {
@@ -43,7 +43,7 @@ public class ChunkDecoderFactory {
     }
   }
 
-  private ChunkFactory createFactory(DatatypeMessage datatype) {
+  public ChunkFactory createFactory(final DatatypeMessage datatype) {
     if(datatype.isDoubleIEE754()) {
       return new ChunkFactory() {
         @Override
@@ -56,6 +56,7 @@ public class ChunkDecoderFactory {
       return new ChunkFactory() {
         @Override
         public Chunk wrap(long[] chunkOffset, ByteBuffer buffer) {
+          buffer.order(datatype.getByteOrder());
           return new Int32Chunk(chunkOffset, buffer.asIntBuffer());
         }
       };

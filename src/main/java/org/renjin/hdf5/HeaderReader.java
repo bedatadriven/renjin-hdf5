@@ -220,4 +220,12 @@ public class HeaderReader {
             buffer.position(buffer.position() + misalignment);
         }
     }
+
+    public long[] readOffsets(int count) throws IOException {
+        long[] offsets = new long[count];
+        for (int i = 0; i < count; i++) {
+            offsets[i] = readOffset();
+        }
+        return offsets;
+    }
 }

@@ -85,6 +85,4 @@ public class BTreeChunkIndex extends ChunkIndex {
 
         return node.findChildAddress(chunkCoordinates);
     }
-
-
 }
