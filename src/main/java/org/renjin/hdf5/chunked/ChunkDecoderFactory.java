@@ -48,6 +48,7 @@ public class ChunkDecoderFactory {
       return new ChunkFactory() {
         @Override
         public Chunk wrap(long[] chunkOffset, ByteBuffer buffer) {
+          buffer.order(datatype.getByteOrder());
           return new DoubleChunk(chunkOffset, buffer.asDoubleBuffer());
         }
       };
